@@ -204,7 +204,7 @@ export default function IndexPopup() {
   }
 
   return (
-    <div className="w-[390px] min-h-[520px] max-h-[580px] bg-zinc-950 text-zinc-100 flex flex-col font-sans overflow-hidden antialiased select-none">
+    <div className="w-[430px] min-h-[540px] max-h-[600px] bg-zinc-950 text-zinc-100 flex flex-col font-sans overflow-hidden antialiased select-none">
       {/* App Header */}
       <Header
         searchQuery={searchQuery}

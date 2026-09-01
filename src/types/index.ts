@@ -26,10 +26,18 @@ export interface IDBRecord {
   value: any
 }
 
+export interface IDBIndexData {
+  name: string
+  keyPath: any
+  unique: boolean
+  multiEntry: boolean
+}
+
 export interface IDBStoreData {
   name: string
   keyPath?: any
   autoIncrement: boolean
+  indexes?: IDBIndexData[]
   records: IDBRecord[]
 }
 

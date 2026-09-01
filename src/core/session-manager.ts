@@ -207,6 +207,18 @@ export class SessionManager {
   }
 
   /**
+   * Check if extension is allowed in incognito mode.
+   */
+  static async checkIncognitoAllowed(): Promise<boolean> {
+    if (!chrome?.extension?.isAllowedIncognitoAccess) return true
+    return new Promise((resolve) => {
+      chrome.extension.isAllowedIncognitoAccess((isAllowed) => {
+        resolve(isAllowed)
+      })
+    })
+  }
+
+  /**
    * Launch and apply a saved session pocket.
    */
   static async launchSession(
@@ -237,23 +249,35 @@ export class SessionManager {
     }
 
     if (mode === "incognito") {
-      // 1. Clear incognito cookies for domain
-      await CookieEngine.clearDomainCookies(targetSession.domain, targetSession.apexDomain, "1")
-      // 2. Inject target cookies into incognito store
-      await CookieEngine.restoreCookies(targetSession.cookies, "1")
+      const allowed = await this.checkIncognitoAllowed()
+      if (!allowed) {
+        throw new Error(
+          'Extension is not enabled in Incognito!\nPlease go to chrome://extensions -> SessionPocket -> Details -> Enable "Allow in incognito".'
+        )
+      }
 
-      // 3. Open in new incognito window
+      // 1. Open Incognito window with about:blank first!
+      // This activates cookie storeId "1" in Chromium
       if (chrome?.windows) {
         const win = await chrome.windows.create({
           incognito: true,
-          url: targetSession.url
+          url: "about:blank"
         })
 
-        // Inject storage after tab loads
         const targetTab = win.tabs?.[0]
-        if (targetTab?.id) {
-          this.attachStorageRestorer(targetTab.id, targetSession)
+        if (!targetTab?.id) {
+          throw new Error("Failed to create incognito window.")
         }
+
+        // 2. Clear and inject cookies into active store "1"
+        await CookieEngine.clearDomainCookies(targetSession.domain, targetSession.apexDomain, "1")
+        await CookieEngine.restoreCookies(targetSession.cookies, "1")
+
+        // 3. Navigate tab to target URL
+        await chrome.tabs.update(targetTab.id, { url: targetSession.url })
+
+        // 4. Attach storage restorer with reload trigger so SPAs boot with all state!
+        this.attachStorageRestorer(targetTab.id, targetSession)
       }
     } else {
       // Regular window mode (0)
@@ -291,17 +315,22 @@ export class SessionManager {
   }
 
   /**
-   * Injects web storage & IndexedDB as soon as tab completes initial navigation.
+   * Injects web storage & IndexedDB as soon as tab completes initial navigation,
+   * and executes a single reload so SPAs read the restored state on initial mount.
    */
   private static attachStorageRestorer(tabId: number, session: SessionPocket): void {
     if (!chrome?.tabs?.onUpdated) return
+
+    let injected = false
 
     const listener = async (
       updatedTabId: number,
       changeInfo: chrome.tabs.TabChangeInfo
     ) => {
-      if (updatedTabId === tabId && changeInfo.status === "complete") {
+      if (updatedTabId === tabId && changeInfo.status === "complete" && !injected) {
+        injected = true
         chrome.tabs.onUpdated.removeListener(listener)
+
         // Inject storage
         if (session.storage) {
           await StorageEngine.restoreStorage(tabId, session.storage)
@@ -309,6 +338,21 @@ export class SessionManager {
         if (session.idbSnapshot) {
           await IDBEngine.restoreIndexedDB(tabId, session.idbSnapshot)
         }
+
+        // Single reload trigger to ensure SPAs (React/Next/WhatsApp/etc.)
+        // read the restored storage on initial mount instead of staying in logged out state
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            world: "MAIN",
+            func: () => {
+              if (!sessionStorage.getItem("__sp_restored_once__")) {
+                sessionStorage.setItem("__sp_restored_once__", "true")
+                window.location.reload()
+              }
+            }
+          })
+        } catch (e) {}
       }
     }
 
@@ -317,7 +361,7 @@ export class SessionManager {
     // Fallback timeout to prevent listener leak
     setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(listener)
-    }, 15000)
+    }, 20000)
   }
 
   /**

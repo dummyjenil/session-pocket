@@ -30,10 +30,18 @@ export const IDBRecordSchema = z.object({
   value: z.any()
 })
 
+export const IDBIndexDataSchema = z.object({
+  name: z.string(),
+  keyPath: z.any(),
+  unique: z.boolean().default(false),
+  multiEntry: z.boolean().default(false)
+})
+
 export const IDBStoreDataSchema = z.object({
   name: z.string(),
   keyPath: z.any().optional(),
   autoIncrement: z.boolean().default(false),
+  indexes: z.array(IDBIndexDataSchema).default([]),
   records: z.array(IDBRecordSchema).default([])
 })
 

@@ -31,14 +31,14 @@ export const WebsiteGroup: React.FC<WebsiteGroupProps> = ({
   const favicon = getFaviconUrl(group.domain, group.faviconUrl)
 
   return (
-    <div className="rounded-xl bg-zinc-950/60 border border-zinc-800/70 overflow-hidden transition-colors">
+    <div className="rounded-xl bg-zinc-950/60 border border-zinc-800/70 transition-colors">
       {/* Website Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-3 py-2.5 bg-zinc-900/40 hover:bg-zinc-900/80 cursor-pointer select-none transition-colors"
+        className="flex items-center justify-between px-3 py-2 bg-zinc-900/50 hover:bg-zinc-900/80 rounded-t-xl cursor-pointer select-none transition-colors border-b border-zinc-800/40"
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <button className="text-zinc-400 hover:text-zinc-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <button className="text-zinc-400 hover:text-zinc-200 transition-transform">
             {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           </button>
 
@@ -51,15 +51,15 @@ export const WebsiteGroup: React.FC<WebsiteGroupProps> = ({
             }}
           />
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs font-semibold text-zinc-100 truncate">{displayName}</span>
-            <span className="text-[10px] text-zinc-400 truncate max-w-[130px]">{group.domain}</span>
+            <span className="text-[10px] text-zinc-400 truncate max-w-[150px]">{group.domain}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-medium">
-            {group.sessions.length}
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800/90 text-zinc-300 font-medium border border-zinc-700/40">
+            {group.sessions.length} {group.sessions.length === 1 ? "pocket" : "pockets"}
           </span>
           <button
             onClick={(e) => {
@@ -76,7 +76,7 @@ export const WebsiteGroup: React.FC<WebsiteGroupProps> = ({
 
       {/* Session Pockets List */}
       {isOpen && (
-        <div className="p-2 space-y-1.5 border-t border-zinc-800/40">
+        <div className="p-2 space-y-2 rounded-b-xl">
           {group.sessions.map((session) => (
             <SessionItem
               key={session.id}

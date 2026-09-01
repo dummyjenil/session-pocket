@@ -56,45 +56,52 @@ export class IDBEngine {
                           const keyPath = store.keyPath
                           const autoIncrement = store.autoIncrement
 
-                          // Fetch up to 100 records per store to capture auth/session state safely
-                          const records: any[] = await new Promise((resStore) => {
-                            const getAllReq = store.getAll(undefined, 100)
-                            const getKeysReq = store.getAllKeys(undefined, 100)
+                          // Capture indexes metadata
+                          const indexes: any[] = []
+                          for (const idxName of store.indexNames) {
+                            try {
+                              const idx = store.index(idxName)
+                              indexes.push({
+                                name: idx.name,
+                                keyPath: idx.keyPath,
+                                unique: idx.unique,
+                                multiEntry: idx.multiEntry
+                              })
+                            } catch (e) {}
+                          }
 
-                            getAllReq.onerror = () => resStore([])
-                            getAllReq.onsuccess = () => {
-                              getKeysReq.onsuccess = () => {
-                                const vals = getAllReq.result || []
-                                const keys = getKeysReq.result || []
-                                const combined = vals.map((val: any, idx: number) => {
-                                  try {
-                                    // Handle Uint8Array/ArrayBuffer if present
-                                    let safeVal = val
-                                    if (val instanceof Uint8Array) {
-                                      safeVal = { __type: "Uint8Array", data: Array.from(val) }
-                                    }
-                                    return {
-                                      key: keys[idx],
-                                      value: safeVal
-                                    }
-                                  } catch {
-                                    return { key: keys[idx], value: null }
-                                  }
+                          // Capture all records using cursor (no arbitrary limits)
+                          const records: any[] = await new Promise((resStore) => {
+                            const items: any[] = []
+                            const cursorReq = store.openCursor()
+
+                            cursorReq.onsuccess = (e: any) => {
+                              const cursor = e.target.result
+                              if (cursor) {
+                                let val = cursor.value
+                                if (val instanceof Uint8Array) {
+                                  val = { __type: "Uint8Array", data: Array.from(val) }
+                                } else if (val instanceof ArrayBuffer) {
+                                  val = { __type: "Uint8Array", data: Array.from(new Uint8Array(val)) }
+                                }
+                                items.push({
+                                  key: cursor.key,
+                                  value: val
                                 })
-                                resStore(combined)
-                              }
-                              getKeysReq.onerror = () => {
-                                resStore(
-                                  (getAllReq.result || []).map((val: any) => ({ value: val }))
-                                )
+                                cursor.continue()
+                              } else {
+                                resStore(items)
                               }
                             }
+
+                            cursorReq.onerror = () => resStore([])
                           })
 
                           stores.push({
                             name: storeName,
                             keyPath,
                             autoIncrement,
+                            indexes,
                             records
                           })
                         } catch (storeErr) {
@@ -175,12 +182,29 @@ export class IDBEngine {
                 req.onupgradeneeded = (event) => {
                   const db = req.result
                   for (const storeData of dbData.stores) {
+                    let store: IDBObjectStore
                     if (!db.objectStoreNames.contains(storeData.name)) {
                       const options: IDBObjectStoreParameters = {}
                       if (storeData.keyPath !== undefined) options.keyPath = storeData.keyPath
                       if (storeData.autoIncrement !== undefined)
                         options.autoIncrement = storeData.autoIncrement
-                      db.createObjectStore(storeData.name, options)
+                      store = db.createObjectStore(storeData.name, options)
+                    } else {
+                      store = req.transaction!.objectStore(storeData.name)
+                    }
+
+                    // Reconstruct all indexes!
+                    if (storeData.indexes && Array.isArray(storeData.indexes)) {
+                      for (const idx of storeData.indexes) {
+                        if (!store.indexNames.contains(idx.name)) {
+                          try {
+                            store.createIndex(idx.name, idx.keyPath, {
+                              unique: idx.unique,
+                              multiEntry: idx.multiEntry
+                            })
+                          } catch (e) {}
+                        }
+                      }
                     }
                   }
                 }
@@ -204,6 +228,9 @@ export class IDBEngine {
                     for (const storeData of dbData.stores) {
                       if (!storeNames.includes(storeData.name)) continue
                       const store = tx.objectStore(storeData.name)
+
+                      // Clear existing records before restoring to avoid collision
+                      try { store.clear() } catch (e) {}
 
                       for (const rec of storeData.records) {
                         try {

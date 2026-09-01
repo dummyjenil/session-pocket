@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SessionPocket Test Web Application</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        <div>
+          <h1>Cloud Workspace Demo</h1>
+          <p>Mock Web App simulating full web application session state</p>
+        </div>
+      </div>
+      <div id="authBadge" class="badge badge-logged-out">Guest / Logged Out</div>
+    </header>
+
+    <!-- Account Switcher / Simulators -->
+    <section class="card profile-card">
+      <h2>1. Simulate Website Login</h2>
+      <p class="subtitle">Click an account below to populate full Cookies, LocalStorage, SessionStorage, and IndexedDB state.</p>
+      
+      <div class="button-group">
+        <button id="btnLoginAlice" class="btn btn-primary">Log In as Alice (Work)</button>
+        <button id="btnLoginBob" class="btn btn-secondary">Log In as Bob (Personal)</button>
+        <button id="btnLogout" class="btn btn-danger">Log Out / Clear All State</button>
+      </div>
+    </section>
+
+    <!-- Live Diagnostics of All 4 State Layers -->
+    <section class="card diagnostics-card">
+      <h2>2. Live State Vault Diagnostics ("Sab Ka Sab Store")</h2>
+      <p class="subtitle">When you save and restore this tab into Incognito mode, every single indicator below must match!</p>
+
+      <div class="grid">
+        <!-- Cookies -->
+        <div class="stat-box">
+          <div class="stat-title">
+            <span>🍪 Document & Auth Cookies</span>
+            <span id="cookieCount" class="counter">0</span>
+          </div>
+          <pre id="cookieDisplay" class="code-box">No cookies set</pre>
+        </div>
+
+        <!-- LocalStorage -->
+        <div class="stat-box">
+          <div class="stat-title">
+            <span>📦 LocalStorage State</span>
+            <span id="lsCount" class="counter">0</span>
+          </div>
+          <pre id="lsDisplay" class="code-box">Empty</pre>
+        </div>
+
+        <!-- SessionStorage -->
+        <div class="stat-box">
+          <div class="stat-title">
+            <span>⏳ SessionStorage</span>
+            <span id="ssCount" class="counter">0</span>
+          </div>
+          <pre id="ssDisplay" class="code-box">Empty</pre>
+        </div>
+
+        <!-- IndexedDB -->
+        <div class="stat-box">
+          <div class="stat-title">
+            <span>🗄️ IndexedDB (With Indexes)</span>
+            <span id="idbCount" class="counter">0 DBs</span>
+          </div>
+          <pre id="idbDisplay" class="code-box">No records</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- IndexedDB Query Verification -->
+    <section class="card verification-card">
+      <h2>3. IndexedDB Index Query Verification</h2>
+      <p class="subtitle">Validates that reconstructed object stores didn't lose their indexes (a common bug in session managers).</p>
+      <div id="indexTestResult" class="index-result">Waiting for test...</div>
+    </section>
+  </div>
+
+  <script src="demo.js"></script>
+</body>
+</html>
+

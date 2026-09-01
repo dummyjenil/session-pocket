@@ -11,6 +11,7 @@
   ],
   "compilerOptions": {
     "moduleResolution": "bundler",
+    "types": ["chrome", "node"],
     "paths": {
       "~*": [
         "./src/*"

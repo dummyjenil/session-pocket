@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SessionPocket Prototype</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <span class="logo-icon">🗂️</span>
+        <div>
+          <h1 class="logo-title">SessionPocket</h1>
+          <p class="logo-subtitle">Fidelity Session Vault (Prototype)</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnExport" class="btn-icon" title="Export Backup JSON">📥</button>
+        <button id="btnImportTrigger" class="btn-icon" title="Import Backup JSON">📤</button>
+        <input type="file" id="fileImport" accept=".json" style="display: none;">
+      </div>
+    </header>
+
+    <!-- Active Tab Status -->
+    <div id="activeTabCard" class="tab-card">
+      <div class="tab-info">
+        <img id="tabFavicon" class="favicon" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%2364748b'/></svg>" alt="">
+        <div class="tab-meta">
+          <span id="tabDomain" class="tab-domain">Detecting page...</span>
+          <span id="tabContext" class="tab-context">Standard Mode</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capture Form -->
+    <section class="capture-section">
+      <div class="form-group">
+        <input type="text" id="inputSessionName" placeholder="Session Name (e.g. Work, Alt, Personal)" />
+      </div>
+      <button id="btnSaveSession" class="btn btn-primary">
+        <span>💾 Capture Current Session (Full Vault)</span>
+      </button>
+      <p class="capture-hint">Captures Cookies, LocalStorage, SessionStorage & IndexedDB.</p>
+    </section>
+
+    <!-- Status / Notification Message -->
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+    <!-- Saved Sessions List -->
+    <section class="sessions-section">
+      <div class="section-header">
+        <h2>Saved Pockets (<span id="sessionCount">0</span>)</h2>
+      </div>
+      <div id="sessionList" class="session-list">
+        <!-- Injected dynamically -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Detail Inspection Modal -->
+  <div id="detailModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Session State Breakdown</h3>
+        <button id="btnCloseModal" class="btn-close">×</button>
+      </div>
+      <div id="modalBody" class="modal-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
+

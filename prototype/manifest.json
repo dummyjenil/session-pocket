@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "SessionPocket Prototype",
+  "version": "1.0.0",
+  "description": "Minimal base prototype for complete web session capture, state vaulting, and seamless normal/incognito restoration.",
+  "permissions": [
+    "cookies",
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "incognito": "spanning",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SessionPocket Prototype"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
+

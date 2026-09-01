@@ -176,20 +176,33 @@ export class CookieEngine {
         const cleanHost = cookie.domain.startsWith(".") ? cookie.domain.slice(1) : cookie.domain
         const cookieUrl = `${protocol}${cleanHost}${cookie.path || "/"}`
 
+        let sameSite = (cookie.sameSite as SameSiteStatus) || "unspecified"
+        let secure = Boolean(cookie.secure)
+
+        // Chrome requirement: SameSite=None (no_restriction) requires Secure=true
+        if (sameSite === "no_restriction") {
+          secure = true
+        }
+
         const setDetails: chrome.cookies.SetDetails = {
           url: cookieUrl,
           name: cookie.name,
           value: cookie.value,
           path: cookie.path || "/",
-          secure: Boolean(cookie.secure),
+          secure: secure,
           httpOnly: Boolean(cookie.httpOnly),
-          sameSite: cookie.sameSite || "unspecified",
+          sameSite: sameSite,
           storeId: targetStoreId
         }
 
-        // Only set domain if it is NOT a host-only cookie
-        if (!cookie.hostOnly) {
-          setDetails.domain = cookie.domain
+        // Host-only cookie check: Host-only and __Host- cookies must NOT have domain set
+        const isHostPrefix = cookie.name.startsWith("__Host-")
+        if (isHostPrefix) {
+          setDetails.secure = true
+          setDetails.path = "/"
+        } else if (!cookie.hostOnly) {
+          // Strip leading dot for chrome.cookies.set to avoid rejection in modern Chrome
+          setDetails.domain = cookie.domain.startsWith(".") ? cookie.domain.slice(1) : cookie.domain
         }
 
         // Expiration: keep valid or make persistent if session expired
@@ -198,8 +211,8 @@ export class CookieEngine {
           if (cookie.expirationDate > nowSec) {
             setDetails.expirationDate = cookie.expirationDate
           } else {
-            // Set 1 year in future if it was expired
-            setDetails.expirationDate = nowSec + 365 * 24 * 60 * 60
+            // Set 180 days in future if it was expired
+            setDetails.expirationDate = nowSec + 180 * 24 * 60 * 60
           }
         }
 
