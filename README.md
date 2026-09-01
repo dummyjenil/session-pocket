@@ -1,33 +1,100 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# SessionPocket 🗂️
 
-## Getting Started
+> **One browser. Multiple isolated web sessions.**
 
-First, run the development server:
+SessionPocket is a production-ready, local-first Manifest V3 Chrome Extension that enables users to maintain multiple independent sessions and accounts for any website (e.g. WhatsApp, Instagram, YouTube, and arbitrary web apps) from a single browser profile.
+
+---
+
+## ✨ Features
+
+- **Multi-Account Session Management**: Maintain independent sessions (Personal, Work, Creator, Client, Alt) for any website.
+- **Deep Session State Vault**: Captures all layers of modern web application state:
+  - **Cookies**: Exact URL, domain, and apex domain cookies (including `Secure`, `HttpOnly`, `SameSite`, and MV3 `PartitionKey`).
+  - **LocalStorage**: Complete origin key-value state.
+  - **SessionStorage**: In-memory tab storage.
+  - **IndexedDB**: Crucial for WhatsApp Web and modern PWAs where cryptographic keys and authentication tokens are persisted in IndexedDB.
+- **Atomic Session Swapping**: Clean domain sanitization and state injection when switching accounts, preventing stale token conflicts or session bleeding.
+- **Dual-Context Isolation (Incognito Support)**: Launch any session directly into an isolated Incognito context (`storeId: 1`) to run two independent accounts side-by-side concurrently!
+- **Keyboard-First Quick Switcher (⌘K / Ctrl+K)**: Instant command palette for lightning-fast search and session launching.
+- **Active Session Tracking & Icon Badge**: Shows which session pocket is active on the current domain right on the extension icon.
+- **Auto-Sync on Switch**: Automatically captures rolling session tokens before switching pockets so you never get logged out.
+- **100% Local-First & Zero Telemetry**: Sensitive session data stays strictly inside your browser's `chrome.storage.local`. No external servers, no tracking, and no credentials logged.
+- **Backup & Portability**: 1-click JSON export and import for easy backup and cross-device migration.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Plasmo](https://docs.plasmo.com/) (Manifest V3)
+- **Language**: TypeScript
+- **UI & Styling**: React 18, Tailwind CSS, [Lucide React](https://lucide.dev/)
+- **Validation**: [Zod](https://zod.dev/)
+- **Package Manager**: pnpm
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js >= 18
+- pnpm >= 8 (or npm)
+
+### Installation
+
+```bash
+pnpm install
+```
+
+### Development Mode
 
 ```bash
 pnpm dev
-# or
-npm run dev
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+Load the unpacked extension in Chrome:
+1. Navigate to `chrome://extensions`
+2. Enable **Developer mode** (top right)
+3. Click **Load unpacked**
+4. Select the `build/chrome-mv3-dev` directory
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
-
-## Making production build
-
-Run the following:
+### Production Build
 
 ```bash
 pnpm build
-# or
-npm run build
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+The production-ready extension package will be compiled into:
+```
+build/chrome-mv3-prod/
+```
 
-## Submit to the webstores
+### Run Tests & Typechecking
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+```bash
+# Run unit test suite
+pnpm test
+
+# Run TypeScript compiler checks
+pnpm typecheck
+```
+
+---
+
+## 🔒 Security & Privacy Architecture
+
+1. **Least-Privilege Permissions**:
+   - `cookies`: Read/write session cookies.
+   - `storage` & `unlimitedStorage`: Persistent local vault.
+   - `tabs` & `activeTab`: Target navigation and tab recognition.
+   - `scripting`: On-demand injection for storage capture and restoration in the target tab.
+   - Host permissions: `https://*/*` and `http://*/*`.
+2. **Local-First**: All session state is saved exclusively in `chrome.storage.local`. There is no remote backend, telemetry, analytics, or third-party tracking.
+3. **No Credential Logging**: Passwords, tokens, and cookie values are never logged to `console` or stored outside the browser's protected extension sandbox.
+
+---
+
+## 📋 License
+
+MIT © Jenil Sheth
